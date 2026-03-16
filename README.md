@@ -1,27 +1,33 @@
 # firehose-rb
 
-Ruby client for the Firehose real-time web monitoring API. SSE streaming with auto-reconnect, rules CRUD, and offset tracking.
+[![Gem Version](https://badge.fury.io/rb/firehose-rb.svg)](https://rubygems.org/gems/firehose-rb)
+
+Ruby client for the [Firehose](https://firehose.dev) real-time web monitoring API. Define rules, stream matching pages as they're discovered, and build content pipelines on top of the live web.
 
 ## Installation
 
 ```ruby
-gem "firehose-rb", path: "../firehose-rb"
+gem "firehose-rb", "~> 0.1"
 ```
+
+Then `bundle install`.
 
 ## Configuration
 
 ```ruby
 Firehose.configure do |c|
-  c.management_key = "fhm_..."
-  c.tap_token = "fh_..."
-  c.base_url = "https://api.firehose.dev"  # default
-  c.timeout = 300                           # SSE timeout in seconds
+  c.management_key = ENV["FIREHOSE_MANAGEMENT_KEY"]  # fhm_...
+  c.tap_token      = ENV["FIREHOSE_TAP_TOKEN"]       # fh_...
+  c.base_url       = "https://api.firehose.dev"      # default
+  c.timeout        = 300                              # SSE timeout in seconds
 end
 ```
 
 ## Usage
 
-### Rules CRUD
+### Rules
+
+Rules tell Firehose what to watch for. They use Lucene query syntax.
 
 ```ruby
 client = Firehose.client
@@ -33,7 +39,7 @@ rule = client.create_rule(
   quality: true
 )
 
-# List rules
+# List all rules
 rules = client.list_rules
 
 # Delete a rule
@@ -42,38 +48,61 @@ client.delete_rule(rule.id)
 
 ### Streaming
 
+Connect to the SSE stream and process matching pages in real time.
+
 ```ruby
 client = Firehose.client
 
-# Track offsets for resume
+# Persist offsets so you can resume after restart
 client.on_offset { |offset| save_offset(offset) }
 
 # Stream events (auto-reconnects with exponential backoff)
 client.stream(since: "1h") do |event|
-  event.id              # String
-  event.document.url    # String
-  event.document.title  # String
-  event.document.markdown # String (full page content)
-  event.matched_rule    # String (tag)
-  event.matched_at      # Time
+  event.id                    # String — unique event ID
+  event.document.url          # String — page URL
+  event.document.title        # String — page title
+  event.document.markdown     # String — full page content as markdown
+  event.document.categories   # Array  — page categories
+  event.document.types        # Array  — page types (article, blog, etc.)
+  event.document.language     # String — detected language
+  event.document.publish_time # Time   — when the page was published
+  event.matched_rule          # String — which rule tag matched
+  event.matched_at            # Time   — when the match occurred
 end
 
-# Stop streaming
+# Stop streaming gracefully
 client.stop_stream
 ```
 
+### Resilience
+
+- Auto-reconnect with exponential backoff (1s, 2s, 4s, ... max 30s)
+- `Last-Event-ID` header sent on reconnect for automatic resume
+- `on_offset` callback for persisting stream position
+- Authentication errors (`401/403`) are not retried
+
 ## Data Structures
 
-- `Firehose::Rule` — id, value, tag, quality, nsfw
-- `Firehose::Event` — id, document, matched_rule, matched_at
-- `Firehose::Document` — url, title, markdown, categories, types, language, publish_time
+| Struct | Fields |
+|--------|--------|
+| `Firehose::Rule` | id, value, tag, quality, nsfw |
+| `Firehose::Event` | id, document, matched_rule, matched_at |
+| `Firehose::Document` | url, title, markdown, categories, types, language, publish_time |
 
-## Error Handling
+## Errors
 
-- `Firehose::AuthenticationError` — invalid API keys
-- `Firehose::RateLimitError` — rate limited
-- `Firehose::ConnectionError` — connection failures
-- `Firehose::TimeoutError` — request timeout
+| Error | Cause |
+|-------|-------|
+| `Firehose::AuthenticationError` | Invalid management_key or tap_token |
+| `Firehose::RateLimitError` | Too many requests (429) |
+| `Firehose::ConnectionError` | Network or HTTP errors |
+| `Firehose::TimeoutError` | Stream or request timeout |
 
-SSE streaming auto-reconnects with exponential backoff (1s → 2s → 4s → max 30s).
-Authentication errors are not retried.
+## Requirements
+
+- Ruby >= 3.1
+- [Faraday](https://github.com/lostisland/faraday) ~> 2.0
+
+## License
+
+MIT
