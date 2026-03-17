@@ -103,6 +103,10 @@ client.stop_stream
 - Ruby >= 3.1
 - [Faraday](https://github.com/lostisland/faraday) ~> 2.0
 
+## Used by
+
+Built for [InventList](https://inventlist.com) — a home for indie builders that turns the live web into weekly signals for makers and their agents.
+
 ## License
 
 MIT
