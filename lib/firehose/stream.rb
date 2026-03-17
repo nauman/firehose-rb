@@ -77,7 +77,7 @@ module Firehose
     end
 
     def build_uri(since: nil)
-      uri = URI.join(@config.base_url, "/stream")
+      uri = URI.join(@config.base_url, "/v1/stream")
       params = {}
       params["since"] = since if since
       uri.query = URI.encode_www_form(params) if params.any?

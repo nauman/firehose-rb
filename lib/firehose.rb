@@ -2,6 +2,7 @@
 
 require_relative "firehose/error"
 require_relative "firehose/rule"
+require_relative "firehose/tap"
 require_relative "firehose/document"
 require_relative "firehose/event"
 require_relative "firehose/stream"
@@ -12,7 +13,7 @@ module Firehose
     attr_accessor :management_key, :tap_token, :base_url, :timeout
 
     def initialize
-      @base_url = "https://api.firehose.dev"
+      @base_url = "https://api.firehose.com"
       @timeout = 300
     end
   end
