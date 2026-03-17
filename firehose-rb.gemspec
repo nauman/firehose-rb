@@ -2,12 +2,12 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "firehose-rb"
-  spec.version       = "0.1.0"
+  spec.version       = "0.1.1"
   spec.authors       = ["Nauman Tariq"]
   spec.email         = ["nauman@intellecta.co"]
   spec.summary       = "Ruby client for the Firehose real-time web monitoring API"
   spec.description   = "SSE streaming client with rules CRUD, auto-reconnect, and offset tracking for the Firehose API."
-  spec.homepage      = "https://github.com/naumantariq/firehose-rb"
+  spec.homepage      = "https://github.com/nauman/firehose-rb"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
