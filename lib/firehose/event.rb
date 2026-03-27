@@ -3,12 +3,12 @@
 require "json"
 
 module Firehose
-  Event = Data.define(:id, :document, :matched_rule, :matched_at) do
-    def initialize(id:, document:, matched_rule: nil, matched_at: nil)
+  Event = Data.define(:id, :type, :document, :matched_rule, :matched_at) do
+    def initialize(id:, type: "message", document:, matched_rule: nil, matched_at: nil)
       super
     end
 
-    def self.from_sse(data, id: nil)
+    def self.from_sse(data, id: nil, type: "message")
       parsed = JSON.parse(data)
 
       doc = Document.from_hash(parsed["document"] || parsed)
@@ -16,6 +16,7 @@ module Firehose
 
       new(
         id: id || parsed["id"],
+        type: type,
         document: doc,
         matched_rule: parsed["matched_rule"] || parsed["tag"],
         matched_at: matched_at

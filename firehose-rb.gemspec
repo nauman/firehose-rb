@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name          = "firehose-rb"
-  spec.version       = "0.2.0"
+  spec.version       = "0.2.1"
   spec.authors       = ["Nauman Tariq"]
   spec.email         = ["nauman@intellecta.co"]
   spec.summary       = "Ruby client for the Firehose real-time web monitoring API"

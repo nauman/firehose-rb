@@ -25,6 +25,7 @@ RSpec.describe Firehose::Event do
       event = described_class.from_sse(sse_data)
 
       expect(event).to be_a(Firehose::Event)
+      expect(event.type).to eq("message")
       expect(event.document).to be_a(Firehose::Document)
       expect(event.document.url).to eq("https://example.com/article")
       expect(event.document.title).to eq("AI Agents Are Here")
@@ -36,6 +37,12 @@ RSpec.describe Firehose::Event do
       event = described_class.from_sse(sse_data, id: "custom_id")
 
       expect(event.id).to eq("custom_id")
+    end
+
+    it "uses explicit event type when provided" do
+      event = described_class.from_sse(sse_data, type: "update")
+
+      expect(event.type).to eq("update")
     end
 
     it "raises on invalid JSON" do

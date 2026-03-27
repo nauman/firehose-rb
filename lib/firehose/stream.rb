@@ -33,6 +33,8 @@ module Firehose
         begin
           stream_events(since: since, &block)
           backoff = INITIAL_BACKOFF
+        rescue Firehose::ConnectionError
+          raise
         rescue Errno::ECONNREFUSED, Errno::ECONNRESET, Errno::ETIMEDOUT,
                Net::OpenTimeout, Net::ReadTimeout, IOError => e
           break unless @running
@@ -112,12 +114,15 @@ module Firehose
 
     def parse_sse_event(raw, &block)
       id = nil
+      type = "message"
       data_lines = []
 
       raw.each_line do |line|
         line = line.chomp
         if line.start_with?("id:")
           id = line.sub("id:", "").strip
+        elsif line.start_with?("event:")
+          type = line.sub("event:", "").strip
         elsif line.start_with?("data:")
           data_lines << line.sub("data:", "").strip
         end
@@ -126,10 +131,10 @@ module Firehose
       return if data_lines.empty?
 
       data = data_lines.join("\n")
-      event = Event.from_sse(data, id: id)
+      event = Event.from_sse(data, id: id, type: type)
 
       @last_event_id = id if id
-      @on_offset&.call(@last_event_id)
+      @on_offset&.call(@last_event_id) if id
 
       block.call(event)
     end
